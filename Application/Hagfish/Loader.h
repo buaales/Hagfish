@@ -13,6 +13,7 @@
 
 #include <Uefi.h>
 #include <Protocol/PxeBaseCode.h>
+#include <Protocol/SimpleFileSystem.h>
 
 struct hagfish_loader;
 
@@ -42,6 +43,12 @@ struct hagfish_loader_fs {
     CHAR16* image;
 };
 
+struct hagfish_loader_local_fs{
+    CHAR16* image;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *sfs;
+    EFI_FILE_PROTOCOL *file_protocol;
+};
+
 struct hagfish_loader {
     loader_file_size_fn size_fn;
     loader_file_read_fn read_fn;
@@ -55,6 +62,7 @@ struct hagfish_loader {
     union d {
         struct hagfish_loader_pxe pxe;
         struct hagfish_loader_fs fs;
+        struct hagfish_loader_local_fs local_fs;
     } d;
 };
 
@@ -63,5 +71,8 @@ hagfish_loader_pxe_init(struct hagfish_loader *loader);
 
 EFI_STATUS
 hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image);
+
+EFI_STATUS
+hagfish_loader_local_fs_init(struct hagfish_loader *loader, CHAR16 *image);
 
 #endif // __HAGFISH_LOADER_H

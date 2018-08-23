@@ -717,7 +717,6 @@ configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
     EFI_STATUS status;
     EFI_SHELL_PARAMETERS_PROTOCOL *shellParameters;
 
-#if 0
     // try to obtain handle to Shell
     if (try_shell) {
         status = SystemTable->BootServices->OpenProtocol(ImageHandle,
@@ -725,27 +724,23 @@ configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
                 ImageHandle,
                 NULL,
                 EFI_OPEN_PROTOCOL_GET_PROTOCOL);
+        AsciiPrint("Obtain handle to Shell Result: %d\n", !EFI_ERROR(status));
+        AsciiPrint("Shell Parameters->Argc: %d\n", shellParameters->Argc);
     }
-#endif
-
     loader->imageHandle = ImageHandle;
     loader->systemTable = SystemTable;
     loader->hagfishImage = hag_image;
 
-#if 0
     if (!try_shell || EFI_ERROR(status) || shellParameters->Argc != 2) {
         // could not connect to shell.
         DebugPrint(DEBUG_INFO, "Could not connect to shell or not enough parameters, assuming PXE boot.\n");
         status = hagfish_loader_pxe_init(loader);
-    } else {
-        shellParameters->Argv[1] = L"/menu.lst";
-        DebugPrint(DEBUG_INFO, "Loading configuration %s from file system.\n", shellParameters->Argv[1]);
-        status = hagfish_loader_fs_init(loader, shellParameters->Argv[1]);
     }
-#endif
-
-    CHAR16 *staticParameter = L"/menu.lst";
-    status = hagfish_loader_fs_init(loader, staticParameter);
+    else{
+        DebugPrint(DEBUG_INFO,"try local file system");
+        status = hagfish_loader_local_fs_init(loader,"/menu.lst");
+        //status = hagfish_loader_fs_init(loader, shellParameters->Argv[1]);
+    }
 
     return status;
 }
@@ -1022,22 +1017,11 @@ EFI_STATUS
 UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     EFI_STATUS status;
     EFI_LOADED_IMAGE_PROTOCOL *hag_image;
-    int i, try_shell;
+    int i, try_shell=0;
 
     gBS->SetWatchdogTimer (0, 0, 0, NULL);
 
-#if 0
-    status = ShellInitialize();
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "Failed to initialize ShellLib, aborting.\n");
-        try_shell = 0;
-    } else {
-        try_shell = 1;
-    }
-#endif
-
-    try_shell = 1; // Not used!
-
+    //AsciiPrint("try_shell = %d\n", try_shell);
     AsciiPrint("Hagfish UEFI loader starting\n");
 
     DebugPrint(DEBUG_INFO, "UEFI vendor: %s\n", gST->FirmwareVendor);
@@ -1087,7 +1071,6 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     } else {
         DebugPrint(DEBUG_ERROR, "ACPI: root tables not found.\n");
     }
-
 
     /* Load the boot driver. */
     DebugPrint(DEBUG_INFO, "Loading the boot driver [");
