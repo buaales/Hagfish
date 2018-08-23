@@ -203,16 +203,14 @@ hagfish_loader_pxe_init(struct hagfish_loader *loader) {
 
 /* Functions related to FS loading. */
 
-static EFI_FILE_PROTOCOL *volumeRoot; // for open volume
-
 EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
     EFI_STATUS status;
-#if 0
-    SHELL_FILE_HANDLE file;
-#endif
+
     EFI_FILE_PROTOCOL *file;
     EFI_FILE_INFO     *fileInfo;
     UINTN              fileInfoSize;
+
+    EFI_FILE_PROTOCOL *volumeRoot = loader->d.local_fs.volumeRoot;
 
     size_t path_len = strlen(path);
     CHAR16 path_unicode[path_len];
@@ -253,34 +251,6 @@ EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
         return EFI_LOAD_ERROR;
     }
 
-#if 0
-    AsciiPrint("Call ShellFindFilePath, param: %s\n", path_unicode);
-    CHAR16 *found_file = ShellFindFilePath(path_unicode);
-
-    if (!found_file) {
-        DebugPrint(DEBUG_INFO, "File not found: %s\n", path_unicode);
-        return EFI_LOAD_ERROR;
-    }
-
-
-    status = ShellOpenFileByName(found_file, &file, EFI_FILE_MODE_READ, 0);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellOpenFileByName failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-
-    status = ShellGetFileSize(file, size);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellGetFileSize failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-
-    status = ShellCloseFile(&file);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellCloseFile failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-#endif
     return EFI_SUCCESS;
 }
 
@@ -289,6 +259,8 @@ EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
 
     EFI_STATUS status;
     EFI_FILE_PROTOCOL *file;
+
+    EFI_FILE_PROTOCOL *volumeRoot = loader->d.local_fs.volumeRoot;
 
     size_t path_len = strlen(path);
     CHAR16 path_unicode[path_len];
@@ -324,32 +296,6 @@ EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
         return EFI_LOAD_ERROR;
     }
 
-#if 0
-    CHAR16 *found_file = ShellFindFilePath(path_unicode);
-    if (!found_file) {
-        DebugPrint(DEBUG_INFO, "File not found: %s\n", path_unicode);
-        return EFI_LOAD_ERROR;
-    }
-
-    status = ShellOpenFileByName(found_file, &file, EFI_FILE_MODE_READ, 0);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellOpenFileByName failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-
-    status = ShellReadFile(file, size, buffer);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellReadFile failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-
-    status = ShellCloseFile(&file);
-    if (EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "ShellCloseFile failed: %d\n", status);
-        return EFI_LOAD_ERROR;
-    }
-#endif
-
     return EFI_SUCCESS;
 }
 
@@ -360,11 +306,11 @@ EFI_STATUS fs_multiboot_perpare_fn(struct hagfish_loader *loader, void **cursor)
 EFI_STATUS fs_config_file_name_fn(struct hagfish_loader *loader,
         char *config_file_name, UINT64 size) {
     memset(config_file_name, 0, size);
-    if (size < StrLen(loader->d.fs.image)) {
+    if (size < StrLen(loader->d.local_fs.image)) {
         DebugPrint(DEBUG_ERROR, "file name buffer too short, fix code!\n");
         return EFI_LOAD_ERROR;
     }
-    UnicodeStrToAsciiStr(loader->d.fs.image, config_file_name);
+    UnicodeStrToAsciiStr(loader->d.local_fs.image, config_file_name);
     return EFI_SUCCESS;
 }
 
@@ -373,7 +319,7 @@ EFI_STATUS fs_done_fn(struct hagfish_loader *loader) {
 }
 
 EFI_STATUS
-hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
+hagfish_loader_local_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
 
     EFI_STATUS                      status;
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *sfs;
@@ -381,6 +327,8 @@ hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
     EFI_HANDLE                      ImageHandle;
     UINTN                           handleCount = 0;
     EFI_HANDLE                      *handles = NULL;
+
+    EFI_FILE_PROTOCOL *volumeRoot;
 
     SystemTable = loader->systemTable;
     ImageHandle = loader->imageHandle;
@@ -397,6 +345,11 @@ hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
     {
         AsciiPrint("Hagfish:\tFailed to LocateHandleBuffer, finished.\n");
         return status;
+    }
+
+    if(handleCount==0){
+        AsciiPrint("no controller registed file protocol\n");
+        return EFI_NOT_FOUND;
     }
 
     DebugPrint(DEBUG_INFO, "Hagfish:\tFind %d controllers\n", handleCount);
@@ -430,147 +383,10 @@ hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
     loader->size_fn = &fs_size_fn;
     loader->config_file_name_fn = &fs_config_file_name_fn;
     loader->type = HAGFISH_LOADER_FS;
-    loader->d.fs.image = image;
-
-    return EFI_SUCCESS;
-}
-
-/* Functions related to local FS loading. */
-
-EFI_STATUS fs_local_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
-    EFI_STATUS status;
-
-    EFI_FILE_PROTOCOL *fileHandle;
-
-    size_t path_len = strlen(path);
-    CHAR16 path_unicode[path_len];
-    AsciiStrToUnicodeStr(path, path_unicode);
-    for (size_t i = 0; i < path_len; i++) {
-        if (path_unicode[i] == '/') {
-            path_unicode[i] = '\\';
-        }
-    }
-
-    AsciiPrint("file path: %s\n", path_unicode);
-    loader->d.local_fs.file_protocol
-    
-
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS fs_local_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
-        UINT8 *buffer) {
-    EFI_STATUS status;
-    SHELL_FILE_HANDLE file;
-
-    size_t path_len = strlen(path);
-    CHAR16 path_unicode[path_len];
-    AsciiStrToUnicodeStr(path, path_unicode);
-    for (size_t i = 0; i < path_len; i++) {
-        if (path_unicode[i] == '/') {
-            path_unicode[i] = '\\';
-        }
-    }
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS fs_local_multiboot_perpare_fn(struct hagfish_loader *loader, void **cursor) {
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS fs_local_config_file_name_fn(struct hagfish_loader *loader,
-        char *config_file_name, UINT64 size) {
-    memset(config_file_name, 0, size);
-    if (size < StrLen(loader->d.local_fs.image)) {
-        DebugPrint(DEBUG_ERROR, "file name buffer too short, fix code!\n");
-        return EFI_LOAD_ERROR;
-    }
-    UnicodeStrToAsciiStr(loader->d.local_fs.image, config_file_name);
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS fs_local_done_fn(struct hagfish_loader *loader) {
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS*
-local_fs_loader(struct hagfish_loader * loader, struct hagfish_loader_local_fs *fs){
-    EFI_STATUS status;
-    INTN handleCount;
-    INTN handleIndex = 0;
-
-    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *sfs;
-    EFI_HANDLE *fileHandleBuffer = NULL;
-
-    EFI_FILE_PROTOCOL *root;
-
-    UINTN fileSize = 1024;
-    UINT8 fileBuffer[2048];
-    CHAR16 fileName[100];
-
-    status = loader->systemTable->BootServices->LocateHandleBuffer(
-        ByProtocol,
-        &gEfiSimpleFileSystemProtocolGuid,
-        NULL,
-        &handleCount,
-        &fileHandleBuffer
-    );
-
-    if(EFI_ERROR(status)){
-        ebugPrint(DEBUG_ERROR, "protocol locating failed\n");
-        return status;
-    }
-    
-    if(handleCount>0){
-        //
-        DebugPrint(DEBUG_INFO,"consider the first controller that providing the protocol\n");
-        status = loader->systemTable->BootServices->OpenProtocol(
-            fileHandleBuffer[0],
-            &gEfiSimpleFileSystemProtocolGuid,
-            (VOID**)sfs,
-            loader->imageHandle,
-            NULL,
-            EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL
-        );
-
-        if(EFI_ERROR(status)){
-            DebugPrint(DEBUG_ERROR,"Open SIMPLE_FILE_PROTOCOL error\n");
-            return status;
-        }
-
-        status = sfs->OpenVolume(sfs,&root);
-        if(EFI_ERROR(status)){
-            DebugPrint(DEBUG_ERROR,"Open volume error\n");
-            return status;
-        }
-
-        fs->sfs = sfs;
-        fs->file_protocol = root;
-        return EFI_SUCCESS;
-    }
-    return EFI_NOT_FOUND;
-}
-
-EFI_STATUS
-hagfish_loader_local_fs_init(struct hagfish_loader *loader, CHAR16 *image){
-    EFI_STATUS status;
-
-    loader->done_fn = &fs_local_done_fn;
-    loader->prepare_multiboot_fn = &fs_local_multiboot_perpare_fn;
-    loader->read_fn = &fs_local_read_fn;
-    loader->size_fn = &fs_local_size_fn;
-    loader->config_file_name_fn = &fs_local_config_file_name_fn;
-    loader->type = HAGFISH_LOADER_FS;
     loader->d.local_fs.image = image;
-
-    status = local_fs_loader(loader, &loader->d.local_fs);
     
-    if(!EFI_ERROR(status))
-        return EFI_SUCCESS;
-    else
-        return EFI_LOAD_ERROR;
+    loader->d.local_fs.volumeRoot = volumeRoot;
+    loader->d.local_fs.sfs = sfs;
+
+    return EFI_SUCCESS;
 }
-
-

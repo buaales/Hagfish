@@ -738,8 +738,7 @@ configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
     }
     else{
         DebugPrint(DEBUG_INFO,"try local file system");
-        status = hagfish_loader_local_fs_init(loader,"/menu.lst");
-        //status = hagfish_loader_fs_init(loader, shellParameters->Argv[1]);
+        status = hagfish_loader_local_fs_init(loader,L"/menu.lst");
     }
 
     return status;
@@ -1017,7 +1016,7 @@ EFI_STATUS
 UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     EFI_STATUS status;
     EFI_LOADED_IMAGE_PROTOCOL *hag_image;
-    int i, try_shell=0;
+    int i, try_shell=1;
 
     gBS->SetWatchdogTimer (0, 0, 0, NULL);
 

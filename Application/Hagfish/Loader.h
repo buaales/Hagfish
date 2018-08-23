@@ -46,7 +46,7 @@ struct hagfish_loader_fs {
 struct hagfish_loader_local_fs{
     CHAR16* image;
     EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *sfs;
-    EFI_FILE_PROTOCOL *file_protocol;
+    EFI_FILE_PROTOCOL *volumeRoot;
 };
 
 struct hagfish_loader {
