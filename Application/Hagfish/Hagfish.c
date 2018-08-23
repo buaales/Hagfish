@@ -39,6 +39,7 @@
 #include <Protocol/LoadFile.h>
 #include <Protocol/LoadFile2.h>
 #include <Protocol/PxeBaseCode.h>
+#include <Protocol/SimpleFileSystem.h>
 
 /* Package headers */
 #include <libelf.h>
@@ -712,9 +713,11 @@ load_config(struct hagfish_loader *loader) {
 EFI_STATUS
 configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
         EFI_SYSTEM_TABLE *SystemTable, EFI_LOADED_IMAGE_PROTOCOL *hag_image, int try_shell) {
+
     EFI_STATUS status;
     EFI_SHELL_PARAMETERS_PROTOCOL *shellParameters;
 
+#if 0
     // try to obtain handle to Shell
     if (try_shell) {
         status = SystemTable->BootServices->OpenProtocol(ImageHandle,
@@ -723,24 +726,27 @@ configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
                 NULL,
                 EFI_OPEN_PROTOCOL_GET_PROTOCOL);
     }
-    AsciiPrint("Obtain handle to Shell Result: %d\n", !EFI_ERROR(status));
-    AsciiPrint("Shell Parameters->Argc: %d\n", shellParameters->Argc);
+#endif
+
     loader->imageHandle = ImageHandle;
     loader->systemTable = SystemTable;
     loader->hagfishImage = hag_image;
 
+#if 0
     if (!try_shell || EFI_ERROR(status) || shellParameters->Argc != 2) {
         // could not connect to shell.
         DebugPrint(DEBUG_INFO, "Could not connect to shell or not enough parameters, assuming PXE boot.\n");
         status = hagfish_loader_pxe_init(loader);
     } else {
-        DebugPrint(DEBUG_INFO, "Param1: %s, Param2: %s\n", shellParameters->Argv[0], shellParameters->Argv[1]);
-        DebugPrint(DEBUG_INFO, "Loading configuration %s from file system.\n", shellParameters->Argv[1]);
-        DebugPrint(DEBUG_INFO, "Static set shellParameter to /menu.lst\n");
         shellParameters->Argv[1] = L"/menu.lst";
         DebugPrint(DEBUG_INFO, "Loading configuration %s from file system.\n", shellParameters->Argv[1]);
         status = hagfish_loader_fs_init(loader, shellParameters->Argv[1]);
     }
+#endif
+
+    CHAR16 *staticParameter = L"/menu.lst";
+    status = hagfish_loader_fs_init(loader, staticParameter);
+
     return status;
 }
 
@@ -1012,320 +1018,26 @@ ParseCommandLineToArgs(
   return (EFI_SUCCESS);
 }
 
-#define SHELL_GET_ENVIRONMENT_VARIABLE(EnvVarName,BufferSize,Buffer)    \
-  (gRT->GetVariable((CHAR16*)EnvVarName,                        \
-  &gShellVariableGuid,                                          \
-  0,                                                            \
-  BufferSize,                                                   \
-  Buffer))
-/**
-  creates a new EFI_SHELL_PARAMETERS_PROTOCOL instance and populates it and then
-  installs it on our handle and if there is an existing version of the protocol
-  that one is cached for removal later.
-
-  @param[in, out] NewShellParameters on a successful return, a pointer to pointer
-                                     to the newly installed interface.
-  @param[in, out] RootShellInstance  on a successful return, pointer to boolean.
-                                     TRUE if this is the root shell instance.
-
-  @retval EFI_SUCCESS               the operation completed successfully.
-  @return other                     the operation failed.
-  @sa ReinstallProtocolInterface
-  @sa InstallProtocolInterface
-  @sa ParseCommandLineToArgs
-**/
-EFI_STATUS
-EFIAPI
-CreatePopulateInstallShellParametersProtocol (
-  IN OUT EFI_SHELL_PARAMETERS_PROTOCOL  **NewShellParameters,
-  IN OUT BOOLEAN                        *RootShellInstance
-  )
-{
-  EFI_STATUS Status;
-  EFI_SHELL_PARAMETERS_PROTOCOL *OldShellParameters;  ///< old shell parameters to reinstall upon exiting.
-  EFI_LOADED_IMAGE_PROTOCOL *LoadedImage;
-  CHAR16                    *FullCommandLine;
-  UINTN                     Size;
-
-  Size = 0;
-  FullCommandLine = NULL;
-  LoadedImage = NULL;
-
-  //
-  // Assert for valid parameters
-  //
-  ASSERT(NewShellParameters != NULL);
-  ASSERT(RootShellInstance  != NULL);
-
-  //
-  // See if we have a shell parameters placed on us
-  //
-  Status = gBS->OpenProtocol (
-                gImageHandle,
-                &gEfiShellParametersProtocolGuid,
-                (VOID **) &OldShellParameters,
-                gImageHandle,
-                NULL,
-                EFI_OPEN_PROTOCOL_GET_PROTOCOL
-               );
-  //
-  // if we don't then we must be the root shell (error is expected)
-  //
-  if (EFI_ERROR (Status)) {
-    *RootShellInstance = TRUE;
-  }
-
-  //
-  // Allocate the new structure
-  //
-  *NewShellParameters = AllocateZeroPool(sizeof(EFI_SHELL_PARAMETERS_PROTOCOL));
-  if ((*NewShellParameters) == NULL) {
-    return (EFI_OUT_OF_RESOURCES);
-  }
-
-  //
-  // get loaded image protocol
-  //
-  Status = gBS->OpenProtocol (
-                gImageHandle,
-                &gEfiLoadedImageProtocolGuid,
-                (VOID **) &LoadedImage,
-                gImageHandle,
-                NULL,
-                EFI_OPEN_PROTOCOL_GET_PROTOCOL
-               );
-  ASSERT_EFI_ERROR(Status);
-  //
-  // Build the full command line
-  //
-  Status = SHELL_GET_ENVIRONMENT_VARIABLE(L"ShellOpt", &Size, FullCommandLine);
-  if (Status == EFI_BUFFER_TOO_SMALL) {
-    FullCommandLine = AllocateZeroPool(Size + LoadedImage->LoadOptionsSize);
-    Status = SHELL_GET_ENVIRONMENT_VARIABLE(L"ShellOpt", &Size, FullCommandLine);
-  }
-  if (Status == EFI_NOT_FOUND) {
-    //
-    // no parameters via environment... ok
-    //
-    AsciiPrint("no parameters via environment in CreatePopulateInstallShellParametersProtocol func\n");
-  } else {
-    if (EFI_ERROR(Status)) {
-      return (Status);
-    }
-  }
-  if (Size == 0 && LoadedImage->LoadOptionsSize != 0) {
-    ASSERT(FullCommandLine == NULL);
-    //
-    // Now we need to include a NULL terminator in the size.
-    //
-    Size = LoadedImage->LoadOptionsSize + sizeof(FullCommandLine[0]);
-    FullCommandLine = AllocateZeroPool(Size);
-  }
-  if (FullCommandLine != NULL) {
-    CopyMem (FullCommandLine, LoadedImage->LoadOptions, LoadedImage->LoadOptionsSize);
-    //
-    // Populate Argc and Argv
-    //
-    Status = ParseCommandLineToArgs(FullCommandLine,
-                                    &(*NewShellParameters)->Argv,
-                                    &(*NewShellParameters)->Argc);
-
-    FreePool(FullCommandLine);
-
-    ASSERT_EFI_ERROR(Status);
-  } else {
-    (*NewShellParameters)->Argv = NULL;
-    (*NewShellParameters)->Argc = 0;
-  }
-
-  //
-  // Populate the 3 faked file systems...
-  //
-  if (*RootShellInstance) {
-    //(*NewShellParameters)->StdIn  = &FileInterfaceStdIn;
-    //(*NewShellParameters)->StdOut = &FileInterfaceStdOut;
-    //(*NewShellParameters)->StdErr = &FileInterfaceStdErr;
-    (*NewShellParameters)->StdIn  = NULL;
-    (*NewShellParameters)->StdOut = NULL;
-    (*NewShellParameters)->StdErr = NULL;
-    Status = gBS->InstallProtocolInterface(&gImageHandle,
-                                           &gEfiShellParametersProtocolGuid,
-                                           EFI_NATIVE_INTERFACE,
-                                           (VOID*)(*NewShellParameters));
-  } else {
-    //
-    // copy from the existing ones
-    //
-    (*NewShellParameters)->StdIn  = OldShellParameters->StdIn;
-    (*NewShellParameters)->StdOut = OldShellParameters->StdOut;
-    (*NewShellParameters)->StdErr = OldShellParameters->StdErr;
-    Status = gBS->ReinstallProtocolInterface(gImageHandle,
-                                             &gEfiShellParametersProtocolGuid,
-                                             (VOID*)OldShellParameters,
-                                             (VOID*)(*NewShellParameters));
-  }
-
-  return (Status);
-}
-
-/**
-  Function to create and install on the current handle.
-
-  Will overwrite any existing ShellProtocols in the system to be sure that
-  the current shell is in control.
-
-  This must be removed via calling CleanUpShellProtocol().
-
-  @param[in, out] NewShell   The pointer to the pointer to the structure
-  to install.
-
-  @retval EFI_SUCCESS     The operation was successful.
-  @return                 An error from LocateHandle, CreateEvent, or other core function.
-**/
-typedef struct {
-  LIST_ENTRY                Link;
-  EFI_SHELL_PROTOCOL        *Interface;
-  EFI_HANDLE                Handle;
-} SHELL_PROTOCOL_HANDLE_LIST;
-
-EFI_STATUS
-EFIAPI
-CreatePopulateInstallShellProtocol (
-  IN OUT EFI_SHELL_PROTOCOL  **NewShell
-  )
-{
-  EFI_STATUS                  Status;
-  UINTN                       BufferSize;
-  EFI_HANDLE                  *Buffer;
-  UINTN                       HandleCounter;
-  EFI_SHELL_PROTOCOL          mShellProtocol;
-  SHELL_PROTOCOL_HANDLE_LIST  *OldProtocolNode;
-  SHELL_PROTOCOL_HANDLE_LIST   OldShellList;         ///< List of other instances to reinstall when closing.
-
-  if (NewShell == NULL) {
-    return (EFI_INVALID_PARAMETER);
-  }
-
-  BufferSize = 0;
-  Buffer = NULL;
-  OldProtocolNode = NULL;
-  InitializeListHead(&OldShellList.Link);
-
-  //
-  // Initialize EfiShellProtocol object...
-  //
-  //Status = gBS->CreateEvent(0,
-  //                          0,
-  //                          NULL,
-  //                          NULL,
-  //                          &mShellProtocol.ExecutionBreak);
-  //if (EFI_ERROR(Status)) {
-  //  return (Status);
-  //}
-
-  //
-  // Get the size of the buffer we need.
-  //
-  Status = gBS->LocateHandle(ByProtocol,
-                             &gEfiShellProtocolGuid,
-                             NULL,
-                             &BufferSize,
-                             Buffer);
-  if (Status == EFI_BUFFER_TOO_SMALL) {
-    //
-    // Allocate and recall with buffer of correct size
-    //
-    Buffer = AllocateZeroPool(BufferSize);
-    if (Buffer == NULL) {
-      return (EFI_OUT_OF_RESOURCES);
-    }
-    Status = gBS->LocateHandle(ByProtocol,
-                               &gEfiShellProtocolGuid,
-                               NULL,
-                               &BufferSize,
-                               Buffer);
-    if (EFI_ERROR(Status)) {
-      FreePool(Buffer);
-      return (Status);
-    }
-    //
-    // now overwrite each of them, but save the info to restore when we end.
-    //
-    for (HandleCounter = 0 ; HandleCounter < (BufferSize/sizeof(EFI_HANDLE)) ; HandleCounter++) {
-      OldProtocolNode = AllocateZeroPool(sizeof(SHELL_PROTOCOL_HANDLE_LIST));
-      ASSERT(OldProtocolNode != NULL);
-      Status = gBS->OpenProtocol(Buffer[HandleCounter],
-                                &gEfiShellProtocolGuid,
-                                (VOID **) &(OldProtocolNode->Interface),
-                                gImageHandle,
-                                NULL,
-                                EFI_OPEN_PROTOCOL_GET_PROTOCOL
-                               );
-      if (!EFI_ERROR(Status)) {
-        //
-        // reinstall over the old one...
-        //
-        OldProtocolNode->Handle = Buffer[HandleCounter];
-        Status = gBS->ReinstallProtocolInterface(
-                            OldProtocolNode->Handle,
-                            &gEfiShellProtocolGuid,
-                            OldProtocolNode->Interface,
-                            (VOID*)(&mShellProtocol));
-        if (!EFI_ERROR(Status)) {
-          //
-          // we reinstalled sucessfully.  log this so we can reverse it later.
-          //
-
-          //
-          // add to the list for subsequent...
-          //
-          InsertTailList(&OldShellList.Link, &OldProtocolNode->Link);
-        }
-      }
-    }
-    FreePool(Buffer);
-  } else if (Status == EFI_NOT_FOUND) {
-    ASSERT(IsListEmpty(&OldShellList.Link));
-    //
-    // no one else published yet.  just publish it ourselves.
-    //
-    Status = gBS->InstallProtocolInterface (
-                      &gImageHandle,
-                      &gEfiShellProtocolGuid,
-                      EFI_NATIVE_INTERFACE,
-                      (VOID*)(&mShellProtocol));
-  }
-
-  //if (PcdGetBool(PcdShellSupportOldProtocols)){
-  //  ///@todo support ShellEnvironment2
-  //  ///@todo do we need to support ShellEnvironment (not ShellEnvironment2) also?
-  //}
-
-  if (!EFI_ERROR(Status)) {
-    *NewShell = &mShellProtocol;
-  }
-  return (Status);
-}
-
 EFI_STATUS
 UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     EFI_STATUS status;
     EFI_LOADED_IMAGE_PROTOCOL *hag_image;
     int i, try_shell;
 
-    EFI_STATUS                      Status;
-
     gBS->SetWatchdogTimer (0, 0, 0, NULL);
 
-    //status = ShellInitialize();
-    //if (EFI_ERROR(status)) {
-    //    DebugPrint(DEBUG_ERROR, "Failed to initialize ShellLib, aborting.\n");
-    //    try_shell = 0;
-    //} else {
-    //    try_shell = 1;
-    //}
+#if 0
+    status = ShellInitialize();
+    if (EFI_ERROR(status)) {
+        DebugPrint(DEBUG_ERROR, "Failed to initialize ShellLib, aborting.\n");
+        try_shell = 0;
+    } else {
+        try_shell = 1;
+    }
+#endif
 
-    //AsciiPrint("try_shell = %d\n", try_shell);
+    try_shell = 1; // Not used!
+
     AsciiPrint("Hagfish UEFI loader starting\n");
 
     DebugPrint(DEBUG_INFO, "UEFI vendor: %s\n", gST->FirmwareVendor);

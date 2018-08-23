@@ -31,6 +31,7 @@
 #include <Library/ShellLib.h>
 
 #include <Protocol/LoadedImage.h>
+#include <Protocol/SimpleFileSystem.h>
 
 #include <multiboot2.h>
 
@@ -202,9 +203,16 @@ hagfish_loader_pxe_init(struct hagfish_loader *loader) {
 
 /* Functions related to FS loading. */
 
+static EFI_FILE_PROTOCOL *volumeRoot; // for open volume
+
 EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
     EFI_STATUS status;
+#if 0
     SHELL_FILE_HANDLE file;
+#endif
+    EFI_FILE_PROTOCOL *file;
+    EFI_FILE_INFO     *fileInfo;
+    UINTN              fileInfoSize;
 
     size_t path_len = strlen(path);
     CHAR16 path_unicode[path_len];
@@ -215,10 +223,40 @@ EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
         }
     }
 
+    fileInfoSize = sizeof(EFI_FILE_INFO) + 100; // NAMELEN = 100
+    fileInfo = (EFI_FILE_INFO *) calloc(0, fileInfoSize);
+
+    // Open file first
+    status = volumeRoot->Open(volumeRoot, &file, path_unicode,
+            EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't open file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+    // Get file info
+    status = file->GetInfo(file, &gEfiFileInfoGuid, &fileInfoSize, fileInfo);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't getinfo of file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+    *size = fileInfo->FileSize;
+
+    // Close file
+    status = file->Close(file);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't close file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+#if 0
     AsciiPrint("Call ShellFindFilePath, param: %s\n", path_unicode);
     CHAR16 *found_file = ShellFindFilePath(path_unicode);
 
-    while(1);
     if (!found_file) {
         DebugPrint(DEBUG_INFO, "File not found: %s\n", path_unicode);
         return EFI_LOAD_ERROR;
@@ -242,14 +280,15 @@ EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {
         DebugPrint(DEBUG_ERROR, "ShellCloseFile failed: %d\n", status);
         return EFI_LOAD_ERROR;
     }
-
+#endif
     return EFI_SUCCESS;
 }
 
 EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
         UINT8 *buffer) {
+
     EFI_STATUS status;
-    SHELL_FILE_HANDLE file;
+    EFI_FILE_PROTOCOL *file;
 
     size_t path_len = strlen(path);
     CHAR16 path_unicode[path_len];
@@ -260,6 +299,32 @@ EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
         }
     }
 
+    // Open file first
+    status = volumeRoot->Open(volumeRoot, &file, path_unicode,
+            EFI_FILE_MODE_READ, EFI_FILE_READ_ONLY);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't open file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+    // Read file
+    status = file->Read(file, size, buffer);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't getinfo of file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+    // Close file
+    status = file->Close(file);
+    if (EFI_ERROR(status))
+    {
+        DebugPrint(DEBUG_ERROR, "Can't close file %s.\n", path_unicode);
+        return EFI_LOAD_ERROR;
+    }
+
+#if 0
     CHAR16 *found_file = ShellFindFilePath(path_unicode);
     if (!found_file) {
         DebugPrint(DEBUG_INFO, "File not found: %s\n", path_unicode);
@@ -283,6 +348,7 @@ EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
         DebugPrint(DEBUG_ERROR, "ShellCloseFile failed: %d\n", status);
         return EFI_LOAD_ERROR;
     }
+#endif
 
     return EFI_SUCCESS;
 }
@@ -308,6 +374,56 @@ EFI_STATUS fs_done_fn(struct hagfish_loader *loader) {
 
 EFI_STATUS
 hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
+
+    EFI_STATUS                      status;
+    EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *sfs;
+    EFI_SYSTEM_TABLE                *SystemTable;
+    EFI_HANDLE                      ImageHandle;
+    UINTN                           handleCount = 0;
+    EFI_HANDLE                      *handles = NULL;
+
+    SystemTable = loader->systemTable;
+    ImageHandle = loader->imageHandle;
+
+    DebugPrint(DEBUG_INFO, "Hagfish:\tInit SimpleFileSystem Protocol\n");
+    status = SystemTable->BootServices->LocateHandleBuffer(
+            ByProtocol,
+            &gEfiSimpleFileSystemProtocolGuid,
+            NULL,
+            &handleCount,
+            &handles);
+
+    if (EFI_ERROR(status))
+    {
+        AsciiPrint("Hagfish:\tFailed to LocateHandleBuffer, finished.\n");
+        return status;
+    }
+
+    DebugPrint(DEBUG_INFO, "Hagfish:\tFind %d controllers\n", handleCount);
+
+    /* FIXME: Don't know how to decide which contorller should be used,
+     *      just use the first one.
+     */
+    DebugPrint(DEBUG_INFO, "Hagfish:\tOpen Simple File System on contorller%d\n", 0);
+    status = SystemTable->BootServices->OpenProtocol(
+            handles[0],
+            &gEfiSimpleFileSystemProtocolGuid,
+            (VOID **)&sfs,
+            ImageHandle,
+            NULL,
+            EFI_OPEN_PROTOCOL_BY_HANDLE_PROTOCOL);
+
+    if (EFI_ERROR(status))
+    {
+        AsciiPrint("Hagfish:\tFailed to open Simple File System, finished.\n");
+        return status;
+    }
+
+    // open volume
+    status = sfs->OpenVolume(sfs, &volumeRoot);
+    if(EFI_ERROR(status))
+        return status;
+
     loader->done_fn = &fs_done_fn;
     loader->prepare_multiboot_fn = &fs_multiboot_perpare_fn;
     loader->read_fn = &fs_read_fn;
@@ -318,7 +434,3 @@ hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {
 
     return EFI_SUCCESS;
 }
-
-
-
-
