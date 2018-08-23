@@ -715,23 +715,12 @@ configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,
         EFI_SYSTEM_TABLE *SystemTable, EFI_LOADED_IMAGE_PROTOCOL *hag_image, int try_shell) {
 
     EFI_STATUS status;
-    EFI_SHELL_PARAMETERS_PROTOCOL *shellParameters;
 
-    // try to obtain handle to Shell
-    if (try_shell) {
-        status = SystemTable->BootServices->OpenProtocol(ImageHandle,
-                &gEfiShellParametersProtocolGuid, (VOID **) &shellParameters,
-                ImageHandle,
-                NULL,
-                EFI_OPEN_PROTOCOL_GET_PROTOCOL);
-        AsciiPrint("Obtain handle to Shell Result: %d\n", !EFI_ERROR(status));
-        AsciiPrint("Shell Parameters->Argc: %d\n", shellParameters->Argc);
-    }
     loader->imageHandle = ImageHandle;
     loader->systemTable = SystemTable;
     loader->hagfishImage = hag_image;
 
-    if (!try_shell || EFI_ERROR(status) || shellParameters->Argc != 2) {
+    if (!try_shell) {
         // could not connect to shell.
         DebugPrint(DEBUG_INFO, "Could not connect to shell or not enough parameters, assuming PXE boot.\n");
         status = hagfish_loader_pxe_init(loader);
