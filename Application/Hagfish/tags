@@ -1,0 +1,198 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	2	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.8	//
+acpi1_header	Config.h	/^    EFI_ACPI_1_0_ROOT_SYSTEM_DESCRIPTION_POINTER *acpi1_header;$/;"	m	struct:hagfish_config
+acpi2_header	Config.h	/^    EFI_ACPI_2_0_ROOT_SYSTEM_DESCRIPTION_POINTER *acpi2_header;$/;"	m	struct:hagfish_config
+acpi_allocate_pages	Acpi.c	/^acpi_allocate_pages(EFI_PHYSICAL_ADDRESS memory, size_t n, EFI_MEMORY_TYPE type) {$/;"	f
+acpi_dump_description_header	Acpi.c	/^static void acpi_dump_description_header(EFI_ACPI_DESCRIPTION_HEADER *hdr)$/;"	f	file:
+acpi_dump_madt_entry	Acpi.c	/^static void acpi_dump_madt_entry(EFI_ACPI_6_0_MADT_COMMON_ELEMENT *elm)$/;"	f	file:
+acpi_find_root_table	Acpi.c	/^acpi_find_root_table(struct hagfish_config *cfg) {$/;"	f
+acpi_get_madt_table	Acpi.c	/^static void *acpi_get_madt_table(struct hagfish_config *cfg)$/;"	f	file:
+acpi_get_table	Acpi.c	/^static void *acpi_get_table(struct hagfish_config *cfg, uint32_t sig)$/;"	f	file:
+acpi_get_table_rdst	Acpi.c	/^static void *acpi_get_table_rdst(EFI_ACPI_COMMON_HEADER *hdr, uint32_t sig)$/;"	f	file:
+acpi_get_table_xsdt	Acpi.c	/^static void *acpi_get_table_xsdt(EFI_ACPI_COMMON_HEADER *hdr, uint32_t sig)$/;"	f	file:
+acpi_get_version	Acpi.c	/^static INT32 acpi_get_version(struct hagfish_config *cfg)$/;"	f	file:
+acpi_parse_madt	Acpi.c	/^EFI_STATUS acpi_parse_madt(struct hagfish_config *cfg)$/;"	f
+acpu_table_checksum	Acpi.c	/^static uint8_t acpu_table_checksum(void * table, size_t len)$/;"	f	file:
+ALIGN	Hagfish.c	123;"	d	file:
+allocate_pages	Allocation.c	/^allocate_pages(size_t n, EFI_MEMORY_TYPE type) {$/;"	f
+allocate_pool	Allocation.c	/^allocate_pool(size_t size, EFI_MEMORY_TYPE type) {$/;"	f
+allocate_zero_pool	Allocation.c	/^allocate_zero_pool(size_t size, EFI_MEMORY_TYPE type) {$/;"	f
+arch_init	AArch64/Hardware.c	/^arch_init(void *L0_table) {$/;"	f
+arch_probe	AArch64/Hardware.c	/^arch_probe(void) {$/;"	f
+args_len	Config.h	/^    size_t args_start, args_len;$/;"	m	struct:component_config
+args_start	Config.h	/^    size_t args_start, args_len;$/;"	m	struct:component_config
+ATTR_CACHED	AArch64/Hardware.c	33;"	d	file:
+ATTR_DEVICE	AArch64/Hardware.c	34;"	d	file:
+base	Memory.h	/^    uint64_t base;$/;"	m	struct:ram_region
+bf_mmap_types	Memory.c	/^static const char *bf_mmap_types[] = {$/;"	v	file:
+BLOCK_16G	AArch64/Hardware.c	75;"	d	file:
+BLOCK_16G_MASK	AArch64/Hardware.c	76;"	d	file:
+boot_driver	Config.h	/^    struct component_config *boot_driver;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::component_config
+boot_driver_entry	Config.h	/^    void *boot_driver_entry;$/;"	m	struct:hagfish_config
+boot_driver_segments	Config.h	/^    struct region_list *boot_driver_segments;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::region_list
+buf	Config.h	/^    char *buf;$/;"	m	struct:hagfish_config
+build_page_tables	AArch64/Hardware.c	/^build_page_tables(struct hagfish_config *cfg) {$/;"	f
+compare_efi_mmap_entry	Memory.c	/^static int compare_efi_mmap_entry(const void *p1, const void *p2) {$/;"	f	file:
+component_config	Config.h	/^struct component_config {$/;"	s
+configure_loader	Hagfish.c	/^configure_loader(struct hagfish_loader *loader, EFI_HANDLE ImageHandle,$/;"	f
+config_file_name_fn	Loader.h	/^    loader_config_file_name_fn config_file_name_fn;$/;"	m	struct:hagfish_loader
+COVER	Util.h	13;"	d
+cpu_driver	Config.h	/^    struct component_config *cpu_driver;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::component_config
+cpu_driver_entry	Config.h	/^    void *cpu_driver_entry;$/;"	m	struct:hagfish_config
+cpu_driver_entry	Hagfish.c	/^typedef void (*cpu_driver_entry)(uint32_t multiboot_magic,$/;"	t	file:
+cpu_driver_segments	Config.h	/^    struct region_list *cpu_driver_segments;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::region_list
+CreatePopulateInstallShellParametersProtocol	Hagfish.c	/^CreatePopulateInstallShellParametersProtocol ($/;"	f
+CreatePopulateInstallShellProtocol	Hagfish.c	/^CreatePopulateInstallShellProtocol ($/;"	f
+create_multiboot_info	Hagfish.c	/^create_multiboot_info(struct hagfish_config *cfg,$/;"	f
+d	Loader.h	/^    union d {$/;"	u	struct:hagfish_loader
+d	Loader.h	/^    } d;$/;"	m	struct:hagfish_loader	typeref:union:hagfish_loader::d
+DEFAULT_STACK_SIZE	Config.h	27;"	d
+describe_tcr	AArch64/Hardware.c	/^describe_tcr(UINTN tcr) {$/;"	f
+device_regions	Config.h	/^    struct region_list *device_regions;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::region_list
+done_fn	Loader.h	/^    loader_done_fn done_fn;$/;"	m	struct:hagfish_loader
+dump_table	AArch64/Hardware.c	/^dump_table(uint64_t vbase, uint64_t *table, size_t level) {$/;"	f
+EfiBarrelfishBootPageTable	Allocation.h	/^    EfiBarrelfishBootPageTable=  0x80000004,$/;"	e	enum:__anon2
+EfiBarrelfishCPUDriver	Allocation.h	/^    EfiBarrelfishCPUDriver=      0x80000000,$/;"	e	enum:__anon2
+EfiBarrelfishCPUDriverStack	Allocation.h	/^    EfiBarrelfishCPUDriverStack= 0x80000001,$/;"	e	enum:__anon2
+EfiBarrelfishELFData	Allocation.h	/^    EfiBarrelfishELFData=        0x80000003,$/;"	e	enum:__anon2
+EfiBarrelfishFirstMemType	Allocation.h	/^    EfiBarrelfishFirstMemType=   0x80000000,$/;"	e	enum:__anon2
+EfiBarrelfishMaxMemType	Allocation.h	/^    EfiBarrelfishMaxMemType$/;"	e	enum:__anon2
+EfiBarrelfishMultibootData	Allocation.h	/^    EfiBarrelfishMultibootData=  0x80000002,$/;"	e	enum:__anon2
+EFI_ACPI_6_0_MADT_COMMON_ELEMENT	Acpi.h	/^} EFI_ACPI_6_0_MADT_COMMON_ELEMENT;$/;"	t	typeref:struct:__anon1
+EFI_BARRELFISH_MEMORY_TYPE	Allocation.h	/^} EFI_BARRELFISH_MEMORY_TYPE;$/;"	t	typeref:enum:__anon2
+FindEndOfParameter	Hagfish.c	/^FindEndOfParameter($/;"	f
+FindFirstCharacter	Hagfish.c	/^FindFirstCharacter($/;"	f
+find_eol	Config.c	/^find_eol(const char *buf, size_t size, size_t start) {$/;"	f	file:
+find_token	Config.c	/^find_token(const char *buf, size_t size, size_t start, int skip_newlines) {$/;"	f	file:
+first_module	Config.h	/^    struct component_config *first_module, *last_module;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::component_config
+free_bookkeeping	Config.c	/^free_bookkeeping(struct hagfish_config *cfg) {$/;"	f
+free_page_table_bookkeeping	AArch64/Hardware.c	/^free_page_table_bookkeeping(struct page_tables *tables) {$/;"	f
+free_region_list	Memory.c	/^free_region_list(struct region_list *list) {$/;"	f
+fs	Loader.h	/^        struct hagfish_loader_fs fs;$/;"	m	union:hagfish_loader::d	typeref:struct:hagfish_loader::d::hagfish_loader_fs
+fs_config_file_name_fn	Loader.c	/^EFI_STATUS fs_config_file_name_fn(struct hagfish_loader *loader,$/;"	f
+fs_done_fn	Loader.c	/^EFI_STATUS fs_done_fn(struct hagfish_loader *loader) {$/;"	f
+fs_multiboot_perpare_fn	Loader.c	/^EFI_STATUS fs_multiboot_perpare_fn(struct hagfish_loader *loader, void **cursor) {$/;"	f
+fs_read_fn	Loader.c	/^EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,$/;"	f
+fs_size_fn	Loader.c	/^EFI_STATUS fs_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {$/;"	f
+GetNextParameter	Hagfish.c	/^GetNextParameter($/;"	f
+get_cmdline	Config.c	/^get_cmdline(const char *buf, size_t size, size_t *cursor,$/;"	f	file:
+get_region_list	Memory.c	/^get_region_list(struct hagfish_config *cfg) {$/;"	f
+get_root_table	AArch64/Hardware.c	/^get_root_table(struct hagfish_config *cfg) {$/;"	f
+get_token	Config.c	/^get_token(const char *buf, size_t size, size_t start) {$/;"	f	file:
+hagfishImage	Loader.h	/^    EFI_LOADED_IMAGE_PROTOCOL *hagfishImage;$/;"	m	struct:hagfish_loader
+hagfish_config	Config.h	/^struct hagfish_config {$/;"	s
+hagfish_config_fmt	Config.c	/^const char *hagfish_config_fmt= "hagfish.cfg.%d.%d.%d.%d";$/;"	v
+hagfish_loader	Loader.h	/^struct hagfish_loader {$/;"	s
+HAGFISH_LOADER_FS	Loader.h	/^    HAGFISH_LOADER_NONE, HAGFISH_LOADER_PXE, HAGFISH_LOADER_FS$/;"	e	enum:hagfish_loader_type
+hagfish_loader_fs	Loader.h	/^struct hagfish_loader_fs {$/;"	s
+hagfish_loader_fs_init	Loader.c	/^hagfish_loader_fs_init(struct hagfish_loader *loader, CHAR16 *image) {$/;"	f
+HAGFISH_LOADER_NONE	Loader.h	/^    HAGFISH_LOADER_NONE, HAGFISH_LOADER_PXE, HAGFISH_LOADER_FS$/;"	e	enum:hagfish_loader_type
+HAGFISH_LOADER_PXE	Loader.h	/^    HAGFISH_LOADER_NONE, HAGFISH_LOADER_PXE, HAGFISH_LOADER_FS$/;"	e	enum:hagfish_loader_type
+hagfish_loader_pxe	Loader.h	/^struct hagfish_loader_pxe {$/;"	s
+hagfish_loader_pxe_init	Loader.c	/^hagfish_loader_pxe_init(struct hagfish_loader *loader) {$/;"	f
+hagfish_loader_type	Loader.h	/^enum hagfish_loader_type {$/;"	g
+Handle	Hagfish.c	/^  EFI_HANDLE                Handle;$/;"	m	struct:__anon3	file:
+image	Loader.h	/^    CHAR16* image;$/;"	m	struct:hagfish_loader_fs
+imageHandle	Loader.h	/^    EFI_HANDLE imageHandle;$/;"	m	struct:hagfish_loader
+image_address	Config.h	/^    void *image_address;$/;"	m	struct:component_config
+image_done	Hagfish.c	/^image_done(void) {$/;"	f
+image_size	Config.h	/^    size_t image_size;$/;"	m	struct:component_config
+Interface	Hagfish.c	/^  EFI_SHELL_PROTOCOL        *Interface;$/;"	m	struct:__anon3	file:
+iscomment	Config.c	/^iscomment(char c) {$/;"	f	file:
+isnewline	Config.c	/^isnewline(char c) {$/;"	f	file:
+istoken	Config.c	/^istoken(char c) {$/;"	f	file:
+iswhitespace	Config.c	/^iswhitespace(char c) {$/;"	f	file:
+KERNEL_OFFSET	Hardware.h	22;"	d
+kernel_stack	Config.h	/^    void *kernel_stack;$/;"	m	struct:hagfish_config
+L0_table	AArch64/Hardware.c	/^    union aarch64_descriptor *L0_table;$/;"	m	struct:page_tables	typeref:union:page_tables::aarch64_descriptor	file:
+L1_tables	AArch64/Hardware.c	/^    union aarch64_descriptor **L1_tables;$/;"	m	struct:page_tables	typeref:union:page_tables::aarch64_descriptor	file:
+last_module	Config.h	/^    struct component_config *first_module, *last_module;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::
+Length	Acpi.h	/^    UINT8   Length;$/;"	m	struct:__anon1
+Link	Hagfish.c	/^  LIST_ENTRY                Link;$/;"	m	struct:__anon3	file:
+loader_config_file_name_fn	Loader.h	/^typedef EFI_STATUS (*loader_config_file_name_fn)$/;"	t
+loader_done_fn	Loader.h	/^typedef EFI_STATUS (*loader_done_fn)$/;"	t
+loader_file_read_fn	Loader.h	/^typedef EFI_STATUS (*loader_file_read_fn)$/;"	t
+loader_file_size_fn	Loader.h	/^typedef EFI_STATUS (*loader_file_size_fn)$/;"	t
+loader_multiboot_prepare	Loader.h	/^typedef EFI_STATUS (*loader_multiboot_prepare)$/;"	t
+loader_prepare_multiboot_fn	Loader.h	/^typedef EFI_STATUS (*loader_prepare_multiboot_fn)$/;"	t
+load_component	Hagfish.c	/^load_component(struct hagfish_loader *loader, struct component_config *cmp,$/;"	f
+load_config	Hagfish.c	/^load_config(struct hagfish_loader *loader) {$/;"	f
+madt_elm_string	Acpi.c	/^const char *madt_elm_string[EFI_ACPI_6_0_GIC_ITS + 1] = {$/;"	v
+MEM_MAP_SIZE	Memory.h	23;"	d
+mmap	Memory.c	/^char mmap[MEM_MAP_SIZE];$/;"	v
+mmap_d_size	Memory.c	/^UINTN mmap_size, mmap_key, mmap_d_size;$/;"	v
+mmap_d_ver	Memory.c	/^UINT32 mmap_d_ver;$/;"	v
+mmap_key	Memory.c	/^UINTN mmap_size, mmap_key, mmap_d_size;$/;"	v
+mmap_size	Memory.c	/^UINTN mmap_size, mmap_key, mmap_d_size;$/;"	v
+mmap_start	Config.h	/^    void *mmap_start;$/;"	m	struct:hagfish_config
+mmap_tag	Config.h	/^    struct multiboot_tag_efi_mmap *mmap_tag;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::multiboot_tag_efi_mmap
+mmap_types	Memory.c	/^static const char *mmap_types[] = {$/;"	v	file:
+multiboot	Config.h	/^    void *multiboot;$/;"	m	struct:hagfish_config
+my_image	Hagfish.c	/^my_image(void) {$/;"	f
+my_ip	Loader.h	/^    EFI_IP_ADDRESS server_ip, my_ip;$/;"	m	struct:hagfish_loader_pxe
+net_config	Loader.c	/^net_config(EFI_PXE_BASE_CODE_PROTOCOL *pxe,$/;"	f
+next	Config.h	/^    struct component_config *next;$/;"	m	struct:component_config	typeref:struct:component_config::component_config
+nL1	AArch64/Hardware.c	/^    size_t nL1;$/;"	m	struct:page_tables	file:
+npages	Memory.h	/^    uint64_t npages;$/;"	m	struct:ram_region
+nregions	Memory.h	/^    size_t nregions;$/;"	m	struct:region_list
+ntstring	Hagfish.c	/^ntstring(char *dest, const char *src, size_t len) {$/;"	f	file:
+PAGE_4k	Memory.h	18;"	d
+page_tables	AArch64/Hardware.c	/^struct page_tables {$/;"	s	file:
+page_table_set_attr	AArch64/Hardware.c	/^page_table_set_attr(struct hagfish_config *cfg, uint64_t start, uint64_t end, uint64_t attr) {$/;"	f	file:
+ParseCommandLineToArgs	Hagfish.c	/^ParseCommandLineToArgs($/;"	f
+parse_config	Config.c	/^parse_config(char *buf, size_t size) {$/;"	f
+path_len	Config.h	/^    size_t path_start, path_len;$/;"	m	struct:component_config
+path_start	Config.h	/^    size_t path_start, path_len;$/;"	m	struct:component_config
+prepare_boot_driver	Hagfish.c	/^prepare_boot_driver(struct hagfish_config *cfg, struct hagfish_loader *loader)$/;"	f
+prepare_component	Hagfish.c	/^prepare_component(struct hagfish_loader *loader, struct component_config *component,$/;"	f
+prepare_cpu_driver	Hagfish.c	/^prepare_cpu_driver(struct hagfish_config *cfg, struct hagfish_loader *loader)$/;"	f
+prepare_multiboot_fn	Loader.h	/^    loader_prepare_multiboot_fn prepare_multiboot_fn;$/;"	m	struct:hagfish_loader
+print_memory_map	Memory.c	/^print_memory_map(int update_map) {$/;"	f
+print_ram_regions	Memory.c	/^print_ram_regions(struct region_list *region_list) {$/;"	f
+pxe	Loader.h	/^        struct hagfish_loader_pxe pxe;$/;"	m	union:hagfish_loader::d	typeref:struct:hagfish_loader::d::hagfish_loader_pxe
+pxe	Loader.h	/^    EFI_PXE_BASE_CODE_PROTOCOL *pxe;$/;"	m	struct:hagfish_loader_pxe
+pxe_config_file_name	Loader.c	/^pxe_config_file_name(struct hagfish_loader *loader, char *config_file_name, UINT64 size) {$/;"	f
+pxe_done	Loader.c	/^pxe_done(struct hagfish_loader *loader) {$/;"	f
+pxe_loader	Loader.c	/^pxe_loader(struct hagfish_loader *loader) {$/;"	f
+pxe_prepare_multiboot_fn	Loader.c	/^pxe_prepare_multiboot_fn(struct hagfish_loader *loader, void **cursor) {$/;"	f
+pxe_read_fn	Loader.c	/^pxe_read_fn(struct hagfish_loader *loader,  char *path, UINT64 *size, UINT8 *buffer) {$/;"	f
+pxe_size_fn	Loader.c	/^pxe_size_fn(struct hagfish_loader *loader, char *path, UINT64 *size) {$/;"	f
+ram_region	Memory.h	/^struct ram_region {$/;"	s
+ram_regions	Config.h	/^    struct region_list *ram_regions;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::region_list
+read_fn	Loader.h	/^    loader_file_read_fn read_fn;$/;"	m	struct:hagfish_loader
+regions	Memory.h	/^    struct ram_region regions[0];$/;"	m	struct:region_list	typeref:struct:region_list::ram_region
+region_list	Memory.h	/^struct region_list {$/;"	s
+relocate_elf	Hagfish.c	/^relocate_elf(struct region_list *segments, Elf *elf,$/;"	f
+relocate_memory_map	Memory.c	/^relocate_memory_map(void) {$/;"	f
+ROUNDDOWN	Util.h	14;"	d
+roundpage	Hagfish.c	57;"	d	file:
+ROUNDUP	Util.h	15;"	d
+ROUND_UP	Hagfish.c	121;"	d	file:
+search_region_list	Memory.c	/^search_region_list(struct region_list *list, uint64_t addr) {$/;"	f
+server_ip	Loader.h	/^    EFI_IP_ADDRESS server_ip, my_ip;$/;"	m	struct:hagfish_loader_pxe
+set_memory_map	Memory.c	/^set_memory_map(void) {$/;"	f
+SHELL_GET_ENVIRONMENT_VARIABLE	Hagfish.c	1015;"	d	file:
+SHELL_PROTOCOL_HANDLE_LIST	Hagfish.c	/^} SHELL_PROTOCOL_HANDLE_LIST;$/;"	t	typeref:struct:__anon3	file:
+size_fn	Loader.h	/^    loader_file_size_fn size_fn;$/;"	m	struct:hagfish_loader
+skip_whitespace	Config.c	/^skip_whitespace(const char *buf, size_t size, size_t start, int skip_newlines) {$/;"	f	file:
+stack_size	Config.h	/^    size_t stack_size;$/;"	m	struct:hagfish_config
+systemTable	Loader.h	/^    EFI_SYSTEM_TABLE *systemTable;$/;"	m	struct:hagfish_loader
+tables	Config.h	/^    struct page_tables *tables;$/;"	m	struct:hagfish_config	typeref:struct:hagfish_config::page_tables
+Type	Acpi.h	/^    UINT8   Type;$/;"	m	struct:__anon1
+type	Loader.h	/^    enum hagfish_loader_type type;$/;"	m	struct:hagfish_loader	typeref:enum:hagfish_loader::hagfish_loader_type
+UefiMain	Hagfish.c	/^UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {$/;"	f
+update_memory_map	Memory.c	/^update_memory_map(void) {$/;"	f
+update_memory_map_and_exit_boot_services	Memory.c	/^update_memory_map_and_exit_boot_services(void) {$/;"	f
+update_ram_regions	Memory.c	/^update_ram_regions(struct hagfish_config *cfg) {$/;"	f
+WAIT_FOR_GDB	Config.h	22;"	d
+__HAGFISH_ACPI_H	Acpi.h	11;"	d
+__HAGFISH_ALLOCATION_H	Allocation.h	11;"	d
+__HAGFISH_CONFIG_H	Config.h	11;"	d
+__HAGFISH_LOADER_H	Loader.h	12;"	d
+__HAGFISH_MEMORY_H	Memory.h	11;"	d
+__HAGFISH_PAGE_TABLES_H	Hardware.h	11;"	d
+__HAGFISH_UTIL_H	Util.h	11;"	d

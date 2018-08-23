@@ -1,0 +1,58 @@
+#
+# Copyright (c) 2015, ETH Zuerich.
+# Copyright (c) 2016, Hewlett Packard Enterprise Development LP.
+# All rights reserved.
+#
+# This file is distributed under the terms in the attached LICENSE file.
+# If you do not find this file, copies can be found by writing to:
+# ETH Zurich D-INFK, Haldeneggsteig 4, CH-8092 Zurich. Attn: Systems Group.
+#
+
+[Defines]
+    INF_VERSION                    = 0x00010005
+    BASE_NAME                      = Hagfish
+    FILE_GUID                      = bbfbca3c-6e36-4a35-b7de-a27e9c7312e8
+    MODULE_TYPE                    = UEFI_APPLICATION
+    VERSION_STRING                 = 0.1
+    ENTRY_POINT                    = UefiMain
+
+[Sources]
+    Allocation.c
+    Config.c
+    Hagfish.c
+    Memory.c
+    Loader.c
+    Acpi.c
+
+[Sources.AARCH64]
+    AArch64/Hardware.c
+
+[Packages]
+    ArmPkg/ArmPkg.dec
+    StdLib/StdLib.dec
+    Hagfish/Hagfish.dec
+    MdePkg/MdePkg.dec
+    MdeModulePkg/MdeModulePkg.dec
+    ShellPkg/ShellPkg.dec
+
+[LibraryClasses]
+    ArmLib
+    DebugPrintErrorLevelLib
+    UefiApplicationEntryPoint
+    UefiRuntimeServicesTableLib
+    UefiLib
+    LibC
+    ELF
+
+[Guids]
+    gEfiAcpiTableGuid
+    gEfiAcpi10TableGuid
+    gEfiAcpi20TableGuid
+    gShellVariableGuid
+
+[Protocols]
+    gEfiLoadedImageProtocolGuid
+    gEfiPxeBaseCodeProtocolGuid
+    gEfiLoadFileProtocolGuid
+    gEfiLoadFile2ProtocolGuid
+    gEfiShellParametersProtocolGuid
