@@ -183,16 +183,26 @@ create_multiboot_info(struct hagfish_config *cfg,
 
     cursor= cfg->multiboot;
     {
+        //AsciiPrint("creating multiboot_header\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
+
         struct multiboot_header *hdr = (struct multiboot_header *)cursor;
         hdr->magic = MULTIBOOT2_BOOTLOADER_MAGIC;
         hdr->architecture = MULTIBOOT_ARCHITECTURE_AARCH64;
         hdr->header_length = size;
         hdr->checksum = -(hdr->magic + hdr->architecture + hdr->header_length);
         cursor+= ALIGN(sizeof(struct multiboot_header));
+        
+        //AsciiPrint("%-10a:%d\n","magic",hdr->magic);
+        //AsciiPrint("%-10a:%d\n","arch",hdr->architecture);
+        //AsciiPrint("%-10a:%d\n","len",hdr->header_length);
+        //AsciiPrint("%-10a:%08x\n\n","checksum",hdr->checksum);
     }
     /* Add the ELF section headers. */
 
     {
+        //AsciiPrint("creating multiboot_tag_efi64\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_efi64 *efi=
             (struct multiboot_tag_efi64 *)cursor;
 
@@ -201,10 +211,16 @@ create_multiboot_info(struct hagfish_config *cfg,
         efi->pointer = (uint64_t)cfg->cpu_driver_entry;
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_efi64));
+
+        //AsciiPrint("%-10a:%d\n","type",efi->type);
+        //AsciiPrint("%-10a:%d\n","size",efi->size);
+        //AsciiPrint("%-10a:%016lx\n\n","pointer",efi->pointer);
     }
 
     /* Add the boot command line */
     {
+        //AsciiPrint("creating multiboot_tag_string\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_string *bootcmd=
             (struct multiboot_tag_string *)cursor;
 
@@ -217,15 +233,28 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_string)
                + cfg->cpu_driver->args_len+1);
+
+        //AsciiPrint("%-10a:%d\n","type",bootcmd->type);
+        //AsciiPrint("%-10a:%d\n","size",bootcmd->size);
+        //AsciiPrint("%-10a:%a\n\n","cmdline",bootcmd->string);
     }
     /* Add the boot command line */
 
     /* Add the DHCP ack packet. */
     {
+        //AsciiPrint("creating multiboot_network\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         loader->prepare_multiboot_fn(loader, &cursor);
+        //AsciiPrint("%-10a:%d\n","type",MULTIBOOT_TAG_TYPE_NETWORK);
+        //UINTN _size = ALIGN(sizeof(struct multiboot_tag_network) + sizeof(EFI_PXE_BASE_CODE_PACKET));
+
+        //AsciiPrint("%-10a:%d\n","size",_size);
+        //AsciiPrint("%-10a:%a\n\n","dhcpack","NULL");
     }
     /* Add the ACPI 1.0 header */
     if(cfg->acpi1_header) {
+        //AsciiPrint("creating multiboot_tag_old_acpi\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_old_acpi *acpi=
             (struct multiboot_tag_old_acpi *)cursor;
 
@@ -237,9 +266,15 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_old_acpi)
                + sizeof(EFI_ACPI_1_0_ROOT_SYSTEM_DESCRIPTION_POINTER));
+        
+        //AsciiPrint("%-10a:%d\n","type",acpi->type);
+        //AsciiPrint("%-10a:%d\n","size",acpi->size);
+        //AsciiPrint("%-10a:%a\n\n","rsdp","NULL");
     }
     /* Add the ACPI 2.0+ header */
     if(cfg->acpi2_header) {
+        //AsciiPrint("creating multiboot_tag_new_acpi\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_new_acpi *acpi=
             (struct multiboot_tag_new_acpi *)cursor;
 
@@ -251,9 +286,15 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_new_acpi)
                + sizeof(EFI_ACPI_2_0_ROOT_SYSTEM_DESCRIPTION_POINTER));
+
+        //AsciiPrint("%-10a:%d\n","type",acpi->type);
+        //AsciiPrint("%-10a:%d\n","size",acpi->size);
+        //AsciiPrint("%-10a:%a\n\n","rsdp","NULL");
     }
     /* Add the boot driver module. */
     {
+        //AsciiPrint("creating multiboot_tag_module_64\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_module_64 *kernel=
             (struct multiboot_tag_module_64 *)cursor;
 
@@ -271,9 +312,18 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
                + cfg->boot_driver->args_len+1 + cfg->boot_driver->image_size);
+
+        //AsciiPrint("%-10a:%a\n","kind","boot_driver");
+        //AsciiPrint("%-10a:%d\n","type",kernel->type);
+        //AsciiPrint("%-10a:%d\n","size",kernel->size);
+        //AsciiPrint("%-10a:%016lx\n","mod_start",kernel->mod_start);
+        //AsciiPrint("%-10a:%016lx\n","mod_end",kernel->mod_end);
+        //AsciiPrint("%-10a:%a\n\n","cmdline",kernel->cmdline);
     }
     /* Add the kernel module. */
     {
+        //AsciiPrint("creating multiboot_tag_module_64\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
         struct multiboot_tag_module_64 *kernel=
             (struct multiboot_tag_module_64 *)cursor;
 
@@ -291,9 +341,19 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
                + cfg->cpu_driver->args_len+1 + cfg->cpu_driver->image_size);
+
+        //AsciiPrint("%-10a:%a\n","kind","cpu_driver");
+        //AsciiPrint("%-10a:%d\n","type",kernel->type);
+        //AsciiPrint("%-10a:%d\n","size",kernel->size);
+        //AsciiPrint("%-10a:%016lx\n","mod_start",kernel->mod_start);
+        //AsciiPrint("%-10a:%016lx\n","mod_end",kernel->mod_end);
+        //AsciiPrint("%-10a:%a\n\n","cmdline",kernel->cmdline);
     }
     /* Add the remaining modules */
     for(cmp= cfg->first_module; cmp; cmp= cmp->next) {
+        //AsciiPrint("creating multiboot_tag_module_64\n");
+        //AsciiPrint("%-10a:%016lx\n","addr",cursor);
+        
         struct multiboot_tag_module_64 *module=
             (struct multiboot_tag_module_64 *)cursor;
 
@@ -309,14 +369,143 @@ create_multiboot_info(struct hagfish_config *cfg,
 
         cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
                + cmp->args_len+1 + cmp->image_size);
+
+        //AsciiPrint("%-10a:%a\n","kind","other");
+        //AsciiPrint("%-10a:%d\n","type",module->type);
+        //AsciiPrint("%-10a:%d\n","size",module->size);
+        //AsciiPrint("%-10a:%016lx\n","mod_start",module->mod_start);
+        //AsciiPrint("%-10a:%016lx\n","mod_end",module->mod_end);
+        //AsciiPrint("%-10a:%a\n\n","cmdline",module->cmdline);
     }
     /* Record the position of the memory map, to be filled in after we've
      * finished doing allocations. */
+    //AsciiPrint("creating multiboot_tag_efi_mmap\n");
+    //AsciiPrint("%-10a:%016lx\n","addr",cursor);
     cfg->mmap_tag= (struct multiboot_tag_efi_mmap *)cursor;
     cursor+= ALIGN(sizeof(struct multiboot_tag_efi_mmap));
     cfg->mmap_start= cursor;
+    //AsciiPrint("%-10a:%016lx\n","mmap_addr",cursor);
 
     return cfg->multiboot;
+}
+
+void print_multiboot_layout(struct hagfish_config *cfg)
+{
+    void *cursor = cfg->multiboot;
+    AsciiPrint("multiboot_header ----------------------------\n");
+    {
+        struct multiboot_header *data = (struct multiboot_header*)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","magic",data->magic);
+        AsciiPrint("%-10a:%d\n","arch",data->architecture);
+        AsciiPrint("%-10a:%d\n","len",data->header_length);
+        AsciiPrint("%-10a:%08x\n","checksum",data->checksum);
+        cursor+= ALIGN(sizeof(struct multiboot_header));
+    }
+    AsciiPrint("multiboot_tag_efi64--------------------------\n");
+    {
+        struct multiboot_tag_efi64 *data = (struct multiboot_tag_efi64*)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%016lx\n","pointer",data->pointer);
+        cursor+= ALIGN(sizeof(struct multiboot_tag_efi64));
+    }
+    AsciiPrint("multiboot_tag_string-------------------------\n");
+    {
+        struct multiboot_tag_string *data = (struct multiboot_tag_string*)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%a\n","cmdline",data->string);
+        cursor+= ALIGN(sizeof(struct multiboot_tag_string)
+               + cfg->cpu_driver->args_len+1);
+    }
+    AsciiPrint("multiboot_tag_network------------------------\n");
+    {
+        struct multiboot_tag_network *data = (struct multiboot_tag_network*)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%a\n","dhcpack","NULL");
+        cursor += ALIGN(sizeof(struct multiboot_tag_network)
+         + sizeof(EFI_PXE_BASE_CODE_PACKET));
+    }
+    if(cfg->acpi1_header) {
+        AsciiPrint("multiboot_tag_old_acpi-----------------------\n");
+        struct multiboot_tag_old_acpi *data = 
+            (struct multiboot_tag_old_acpi *)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%a\n","rsdp","NULL");
+        cursor+= ALIGN(sizeof(struct multiboot_tag_old_acpi)
+               + sizeof(EFI_ACPI_1_0_ROOT_SYSTEM_DESCRIPTION_POINTER));
+    }
+    if(cfg->acpi2_header){
+        AsciiPrint("multiboot_tag_new_acpi-----------------------\n");
+        struct multiboot_tag_new_acpi *data =
+            (struct multiboot_tag_new_acpi *)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%a\n","dhcpack","rsdp");
+        cursor+= ALIGN(sizeof(struct multiboot_tag_new_acpi)
+               + sizeof(EFI_ACPI_2_0_ROOT_SYSTEM_DESCRIPTION_POINTER));
+    }
+    AsciiPrint("multiboot_tag_module_64----------------------\n");
+    {
+        struct multiboot_tag_module_64 *data=
+            (struct multiboot_tag_module_64 *)cursor;
+        AsciiPrint("%-10a:%a\n","kind","boot_driver");
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%016lx\n","mod_start",data->mod_start);
+        AsciiPrint("%-10a:%016lx\n","mod_end",data->mod_end);
+        AsciiPrint("%-10a:%a\n","cmdline",data->cmdline);
+        cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
+               + cfg->boot_driver->args_len+1 + cfg->boot_driver->image_size);
+        
+        data = (struct multiboot_tag_module_64 *)cursor;
+        AsciiPrint("%-10a:%a\n","kind","cpu_driver");
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%016lx\n","mod_start",data->mod_start);
+        AsciiPrint("%-10a:%016lx\n","mod_end",data->mod_end);
+        AsciiPrint("%-10a:%a\n","cmdline",data->cmdline);
+        cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
+               + cfg->cpu_driver->args_len+1 + cfg->cpu_driver->image_size);
+        
+        struct component_config *cmp;
+        for(cmp= cfg->first_module; cmp; cmp = cmp->next){
+            data = (struct multiboot_tag_module_64 *)cursor;
+            AsciiPrint("%-10a:%a\n","kind","other");
+            AsciiPrint("%-10a:%016lx\n","addr",data);
+            AsciiPrint("%-10a:%d\n","type",data->type);
+            AsciiPrint("%-10a:%d\n","size",data->size);
+            AsciiPrint("%-10a:%016lx\n","mod_start",data->mod_start);
+            AsciiPrint("%-10a:%016lx\n","mod_end",data->mod_end);
+            AsciiPrint("%-10a:%a\n","cmdline",data->cmdline);
+            cursor+= ALIGN(sizeof(struct multiboot_tag_module_64)
+               + cmp->args_len+1 + cmp->image_size);
+        }
+    }
+    AsciiPrint("multiboot_tag_efi_mmap-----------------------\n");
+    {
+        struct multiboot_tag_efi_mmap *data=
+            (struct multiboot_tag_efi_mmap *)cursor;
+        AsciiPrint("%-10a:%016lx\n","addr",data);
+        AsciiPrint("%-10a:%d\n","type",data->type);
+        AsciiPrint("%-10a:%d\n","size",data->size);
+        AsciiPrint("%-10a:%d\n","descr_size",data->descr_size);
+        AsciiPrint("%-10a:%d\n","descr_ver",data->descr_vers);
+        AsciiPrint("%-10a:%016lx\n","mmap_addr",data->efi_mmap);
+        
+        AsciiPrint("efi_mmap_content-----------------------------\n");
+        print_meomry_map_addr((uint64_t)data->efi_mmap);
+    }
 }
 
 EFI_STATUS
@@ -595,8 +784,8 @@ prepare_boot_driver(struct hagfish_config *cfg, struct hagfish_loader *loader)
                                           &cfg->boot_driver_segments,
                                           &cfg->boot_driver_entry, 0);
     DebugPrint(DEBUG_INFO,
-               "Relocated boot driver entry point is %p\n",
-               cfg->cpu_driver_entry);
+               "Relocated boot driver entry point is %lp\n",
+               cfg->boot_driver_entry);
 
     return status;
 }
@@ -619,7 +808,7 @@ prepare_cpu_driver(struct hagfish_config *cfg, struct hagfish_loader *loader)
                                           &cfg->cpu_driver_segments,
                                           &cfg->cpu_driver_entry, KERNEL_OFFSET);
     DebugPrint(DEBUG_INFO,
-               "Relocated CPU driver entry point is %p, stack at %p\n",
+               "Relocated CPU driver entry point is %lp, stack at %lp\n",
                cfg->cpu_driver_entry, cfg->kernel_stack);
 
     return status;
@@ -651,10 +840,9 @@ image_done(void) {
     status= gST->BootServices->CloseProtocol(
                 gImageHandle, &gEfiLoadedImageProtocolGuid,
                 gImageHandle, NULL);
-    if(EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "CloseProtocol: %r\n", status);
-        return status;
-    }
+    //if(EFI_ERROR(status)) {
+    //    DebugPrint(DEBUG_ERROR, "CloseProtocol: %r\n", status);
+    //    return status;
 
     return EFI_SUCCESS;
 }
@@ -1154,10 +1342,6 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     ASSERT(stack_size > 0);
     ASSERT(root_table);
 
-    /* Free all dynamically-allocated configuration that we're not passing to
-     * the CPU driver. */
-    free_bookkeeping(cfg);
-
     /* Exit EFI boot services. */
     AsciiPrint("Terminating boot services and jumping to image at %p\n",
                kernel_entry);
@@ -1166,14 +1350,26 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
                kernel_stack + stack_size, stack_size >> 10);
     AsciiPrint("Multiboot2 pointer is %p\n", multiboot);
 
-    print_memory_map(1);
+    free_bookkeeping(cfg);
 
     /* The last thing we do is to grab the final memory map, including any
      * allocations and deallocations we've done, as per the UEFI spec
      * recommendation.  This fills in the space we set aside in the multiboot
      * structure. */
-    status= update_memory_map();
+    status = update_memory_map();
     if(EFI_ERROR(status)) return EFI_SUCCESS;
+
+    // Relocate EFI's memory map to the kernel virtual address space.
+    status = relocate_memory_map();
+    if(EFI_ERROR(status)) {
+        DebugPrint(DEBUG_ERROR, "relocate memory map: %r\n", status);
+        return EFI_SUCCESS;
+    }
+    //print_memory_map(0);
+    //print_multiboot_layout(cfg);
+
+    /* Free all dynamically-allocated configuration that we're not passing to
+     * the CPU driver. */
 
     /* Fill in the tag.  We can't use GetMemoryMap to fill these directly, as
      * the multiboot specification requires them to be 32 bit, while EFI may
@@ -1185,18 +1381,13 @@ UefiMain(IN EFI_HANDLE ImageHandle, IN EFI_SYSTEM_TABLE *SystemTable) {
     cfg->mmap_tag->descr_vers= mmap_d_ver;
     memcpy(cfg->mmap_start, mmap, mmap_size);
 
-    // Relocate EFI's memory map to the kernel virtual address space.
-    status = relocate_memory_map();
-    if(EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "relocate memory map: %r\n", status);
-        return EFI_SUCCESS;
-    }
+    //print_multiboot_layout(cfg);
 
-    status = update_memory_map_and_exit_boot_services();
+    status= gST->BootServices->ExitBootServices(
+        gImageHandle, mmap_key);
     if(EFI_ERROR(status)) {
-        DebugPrint(DEBUG_ERROR, "Updating memory map and exit boot services: %r\n",
-                                status);
-        return EFI_SUCCESS;
+        DebugPrint(DEBUG_ERROR, "ExitBootServices: ERROR %r, %x\n", status, mmap_key);
+        return status;
     }
 
     /*** EFI boot services are now terminated, we're on our own. */

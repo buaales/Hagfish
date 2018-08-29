@@ -299,7 +299,18 @@ EFI_STATUS fs_read_fn(struct hagfish_loader *loader, char *path, UINT64 *size,
     return EFI_SUCCESS;
 }
 
+#define ROUND_UP(x, y) (((x) + ((y) - 1)) & ~((y) - 1))
+#define ALIGN(x) ROUND_UP((x), sizeof(uintptr_t))
+
 EFI_STATUS fs_multiboot_perpare_fn(struct hagfish_loader *loader, void **cursor) {
+    // todo
+    struct multiboot_tag_network * mbnet = (struct multiboot_tag_network*)(*cursor);
+    size_t size = ALIGN(sizeof(struct multiboot_tag_network)+sizeof(EFI_PXE_BASE_CODE_PACKET));
+
+    mbnet->type = MULTIBOOT_TAG_TYPE_NETWORK;
+    mbnet->size = size;
+    *cursor += size;
+    
     return EFI_SUCCESS;
 }
 

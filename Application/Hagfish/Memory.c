@@ -25,6 +25,7 @@
 /* The current UEFI memory map.  This is statically allocated, as it needs to
  * persist after we've cleaned up all of our heap allocations. */
 char mmap[MEM_MAP_SIZE];
+
 UINTN mmap_size, mmap_key, mmap_d_size;
 UINT32 mmap_d_ver;
 
@@ -72,8 +73,8 @@ print_memory_map(int update_map) {
     AsciiPrint("Got %d memory map entries of %dB (%dB).\n",
                mmap_n_desc, mmap_d_size, mmap_size);
 
-    AsciiPrint("Type          PStart           PEnd        "
-               "      Size      Attributes\n");
+    AsciiPrint("Type          PStart           PEnd             PVRT        "
+               "       Size      Attributes\n");
     for(i= 0; i < mmap_n_desc; i++) {
         EFI_MEMORY_DESCRIPTOR *desc= 
             ((void *)mmap) + (mmap_d_size * i);
@@ -87,12 +88,47 @@ print_memory_map(int update_map) {
         else
             description= "???";
 
-        AsciiPrint("%-13a %016lx %016lx %9ldkB %01x\n",
+        AsciiPrint("%-13a %016lx %016lx %016x %9ldkB %01x\n",
             description,
             desc->PhysicalStart,
             desc->PhysicalStart + (desc->NumberOfPages<<12) - 1,
+            desc->VirtualStart,
             (desc->NumberOfPages<<12)/1024, desc->Attribute);
     }
+}
+
+void print_meomry_map_addr(uint64_t addr){
+    EFI_STATUS status= EFI_SUCCESS;
+    size_t mmap_n_desc, i;
+
+    AsciiPrint("Memory map at %p, key: %x, descriptor version: %x\n",
+               addr, mmap_key, mmap_d_ver);
+    mmap_n_desc= mmap_size / mmap_d_size;
+    AsciiPrint("Got %d memory map entries of %dB (%dB).\n",
+               mmap_n_desc, mmap_d_size, mmap_size);
+
+    AsciiPrint("Type          PStart           PEnd             PVRT        "
+               "       Size      Attributes\n");
+    for(i= 0; i < mmap_n_desc; i++) {
+        EFI_MEMORY_DESCRIPTOR *desc= 
+            ((void *)addr) + (mmap_d_size * i);
+        const char *description;
+
+        if(desc->Type < EfiMaxMemoryType)
+            description= mmap_types[desc->Type];
+        else if(EfiBarrelfishFirstMemType <= desc->Type &&
+                desc->Type < EfiBarrelfishMaxMemType)
+            description= bf_mmap_types[desc->Type - EfiBarrelfishFirstMemType];
+        else
+            description= "???";
+
+        AsciiPrint("%-13a %016lx %016lx %016lx %9ldkB %01x\n",
+            description,
+            desc->PhysicalStart,
+            desc->PhysicalStart + (desc->NumberOfPages<<12) - 1,
+            desc->VirtualStart,
+            (desc->NumberOfPages<<12)/1024, desc->Attribute);
+    }    
 }
 
 static int compare_efi_mmap_entry(const void *p1, const void *p2) {
@@ -107,6 +143,13 @@ static int compare_efi_mmap_entry(const void *p1, const void *p2) {
     }
 }
 
+void mmap_table_remove(EFI_MEMORY_DESCRIPTOR* mmap, int i, size_t total)
+{
+    for(;i<total-1;i++){
+        *(mmap+i) = *(mmap+i+1);
+    }
+}
+
 EFI_STATUS
 update_memory_map(void) {
     EFI_STATUS status;
@@ -114,7 +157,7 @@ update_memory_map(void) {
     /* Grab the current table from UEFI. */
     mmap_size= MEM_MAP_SIZE;
     status= gST->BootServices->GetMemoryMap(
-                &mmap_size, (void *)&mmap,
+                &mmap_size, (void *)mmap,
                 &mmap_key,  &mmap_d_size,
                 &mmap_d_ver);
     if(status == EFI_BUFFER_TOO_SMALL) {
@@ -151,7 +194,6 @@ update_memory_map_and_exit_boot_services(void) {
         DebugPrint(DEBUG_ERROR, "GetMemoryMap: %r\n", status);
         return status;
     }
-
     status= gST->BootServices->ExitBootServices(
             gImageHandle, mmap_key);
     if(EFI_ERROR(status)) {
@@ -349,7 +391,31 @@ relocate_memory_map(void) {
         EFI_MEMORY_DESCRIPTOR *desc=
             (EFI_MEMORY_DESCRIPTOR *)(mmap + i * mmap_d_size);
         desc->VirtualStart |= KERNEL_OFFSET;
+
     }
+    
+    for(size_t i = 0; i< mmap_n_desc -1 ;){
+        EFI_MEMORY_DESCRIPTOR *desc = (EFI_MEMORY_DESCRIPTOR *)mmap + i;
+        EFI_MEMORY_DESCRIPTOR *desc_n = desc + 1;
+
+        //(desc->Type == EfiBarrelfishBootPageTable || desc->Type == EfiConventionalMemory) &&
+        if( (desc->Type == desc_n->Type) &&
+            (desc->PhysicalStart + (desc->NumberOfPages<<12) == desc_n->PhysicalStart) &&
+            (desc->Attribute == desc_n->Attribute) )
+        {
+            desc->NumberOfPages += desc_n->NumberOfPages;
+            mmap_table_remove((EFI_MEMORY_DESCRIPTOR*)mmap, i + 1, mmap_n_desc);
+            mmap_n_desc--;
+        }
+        else{
+            i++;
+        }
+    }
+    mmap_size = mmap_n_desc * mmap_d_size;
+    DebugPrint(DEBUG_INFO,"mmap_size(merged) %d, page_num(merged) %d\n",mmap_size, mmap_n_desc);
+
+    print_meomry_map_addr((uint64_t)mmap);
+
     return EFI_SUCCESS;
 }
 

@@ -312,7 +312,6 @@ free_bookkeeping(struct hagfish_config *cfg) {
     if(cfg->cpu_driver) free(cfg->cpu_driver);
     if(cfg->cpu_driver_segments) free_region_list(cfg->cpu_driver_segments);
 
-
     /* All non-kernel components. */
 
     struct component_config *cmp, *next;

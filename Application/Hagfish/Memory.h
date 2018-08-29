@@ -20,7 +20,7 @@
 /* We preallocate space for the memory map, to avoid the recursion between
  * checking the memory map size and allocating memory for it.  This will
  * obviously fail if the memory map is particularly big. */
-#define MEM_MAP_SIZE 8192
+#define MEM_MAP_SIZE 81920
 extern char mmap[];
 extern UINTN mmap_size, mmap_key, mmap_d_size;
 extern UINT32 mmap_d_ver;
@@ -45,7 +45,10 @@ size_t search_region_list(struct region_list *list, uint64_t addr);
 void print_ram_regions(struct region_list *region_list);
 EFI_STATUS update_memory_map(void);
 EFI_STATUS update_memory_map_and_exit_boot_services(void);
+
 void print_memory_map(int update_map);
+void print_meomry_map_addr(uint64_t addr);
+
 EFI_STATUS relocate_memory_map(void);
 EFI_STATUS set_memory_map(void);
 
