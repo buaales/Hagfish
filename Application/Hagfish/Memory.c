@@ -143,13 +143,6 @@ static int compare_efi_mmap_entry(const void *p1, const void *p2) {
     }
 }
 
-void mmap_table_remove(EFI_MEMORY_DESCRIPTOR* mmap, int i, size_t total)
-{
-    for(;i<total-1;i++){
-        *(mmap+i) = *(mmap+i+1);
-    }
-}
-
 EFI_STATUS
 update_memory_map(void) {
     EFI_STATUS status;
@@ -376,6 +369,13 @@ print_ram_regions(struct region_list *region_list) {
     AsciiPrint("%lldkB total\n", total / 1024);
 }
 
+void mmap_table_remove(EFI_MEMORY_DESCRIPTOR* mmap, int i, size_t total)
+{
+    for(;i<total-1;i++){
+        *(mmap+i) = *(mmap+i+1);
+    }
+}
+
 EFI_STATUS
 relocate_memory_map(void) {
     EFI_STATUS status;
@@ -393,7 +393,7 @@ relocate_memory_map(void) {
         desc->VirtualStart |= KERNEL_OFFSET;
 
     }
-    
+
     for(size_t i = 0; i< mmap_n_desc -1 ;){
         EFI_MEMORY_DESCRIPTOR *desc = (EFI_MEMORY_DESCRIPTOR *)mmap + i;
         EFI_MEMORY_DESCRIPTOR *desc_n = desc + 1;
