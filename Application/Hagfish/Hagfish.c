@@ -86,7 +86,7 @@ load_component(struct hagfish_loader *loader, struct component_config *cmp,
     }
     ntstring(path, buf + cmp->path_start, cmp->path_len);
 
-    DebugPrint(DEBUG_INFO, "%a", path);
+    DebugPrint(DEBUG_INFO, "%a ", path);
 
     /* Get the file size. */
     status = loader->size_fn(loader, path, (UINTN *) &cmp->image_size);
